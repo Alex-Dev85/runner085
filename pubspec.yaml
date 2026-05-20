@@ -1,0 +1,73 @@
+name: runner085
+description: Aplicativo de treinamento de corrida - do iniciante ao avançado.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+  flutter: '>=3.19.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # State Management
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+
+  # Navigation
+  go_router: ^14.2.0
+
+  # Firebase
+  firebase_core: ^3.1.0
+  firebase_auth: ^5.1.0
+  cloud_firestore: ^5.0.2
+
+  # Serialization
+  freezed_annotation: ^2.4.1
+  json_annotation: ^4.9.0
+
+  # Utils
+  intl: ^0.20.2
+  uuid: ^4.4.0
+  shared_preferences: ^2.2.3
+  connectivity_plus: ^6.0.3
+  logger: ^2.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # Code Generation
+  build_runner: ^2.4.9
+  freezed: ^2.5.2
+  json_serializable: ^6.8.0
+  riverpod_generator: ^2.4.0
+
+  # Lint
+  flutter_lints: ^4.0.0
+  custom_lint: ^0.6.4
+  riverpod_lint: ^2.3.10
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/
+
+  # Fontes Poppins desativadas até os arquivos .ttf serem adicionados em assets/fonts.
+  # Para ativar, baixe Poppins em https://fonts.google.com/specimen/Poppins
+  # coloque os .ttf em assets/fonts/ e descomente o bloco abaixo.
+  # fonts:
+  #   - family: Poppins
+  #     fonts:
+  #       - asset: assets/fonts/Poppins-Regular.ttf
+  #       - asset: assets/fonts/Poppins-Medium.ttf
+  #         weight: 500
+  #       - asset: assets/fonts/Poppins-SemiBold.ttf
+  #         weight: 600
+  #       - asset: assets/fonts/Poppins-Bold.ttf
+  #         weight: 700
