@@ -142,6 +142,7 @@ class _LevelBadge extends StatelessWidget {
         RunnerLevel.beginner => Icons.eco_outlined,
         RunnerLevel.intermediate => Icons.trending_up,
         RunnerLevel.advanced => Icons.local_fire_department_outlined,
+        RunnerLevel.elite => Icons.military_tech_outlined,
       };
 }
 

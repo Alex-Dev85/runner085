@@ -21,7 +21,7 @@ class DefaultFirebaseOptions {
     }
   }
 
-  // TODO: Replace with actual values from `flutterfire configure`
+  // Run `flutterfire configure --project=runner085-prod` to replace these values.
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'YOUR-API-KEY-PROD',
     appId: 'YOUR-APP-ID-PROD',

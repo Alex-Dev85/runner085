@@ -35,6 +35,8 @@ dependencies:
   shared_preferences: ^2.2.3
   connectivity_plus: ^6.0.3
   logger: ^2.2.0
+  flutter_local_notifications: ^18.0.0
+  timezone: ^0.9.4
 
 dev_dependencies:
   flutter_test:

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:runner085/app/theme/app_colors.dart';
 import 'package:runner085/core/utils/extensions.dart';
 import 'package:runner085/core/widgets/app_error_widget.dart';
 import 'package:runner085/core/widgets/app_loading.dart';
 import 'package:runner085/features/plans/domain/entities/workout.dart';
 import 'package:runner085/features/plans/presentation/providers/plans_provider.dart';
+import 'package:runner085/features/progress/presentation/providers/workout_progress_provider.dart';
 
 class WorkoutDetailPage extends ConsumerWidget {
   final String planId;
@@ -53,13 +55,16 @@ class WorkoutDetailPage extends ConsumerWidget {
   }
 }
 
-class _WorkoutContent extends StatelessWidget {
+class _WorkoutContent extends ConsumerWidget {
   final Workout workout;
 
   const _WorkoutContent({required this.workout});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isCompleted = ref.watch(isWorkoutCompletedProvider(workout.id));
+    final progressAsync = ref.watch(workoutProgressProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(workout.dayLabel),
@@ -131,21 +136,79 @@ class _WorkoutContent extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            FilledButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content:
-                        Text('Marcar como concluído (em desenvolvimento)'),
+            if (isCompleted)
+              Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.check_circle,
+                          color: AppColors.success,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Treino concluído!',
+                          style: context.textTheme.titleSmall?.copyWith(
+                            color: AppColors.success,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                );
-              },
-              icon: const Icon(Icons.check_circle_outline),
-              label: const Text('Marcar como concluído'),
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(48),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: progressAsync.isLoading
+                          ? null
+                          : () => ref
+                              .read(workoutProgressProvider.notifier)
+                              .markUncompleted(
+                                workoutId: workout.id,
+                                durationMinutes: workout.durationMinutes,
+                              ),
+                      icon: const Icon(Icons.undo, size: 18),
+                      label: const Text('Desfazer conclusão'),
+                    ),
+                  ),
+                ],
+              )
+            else
+              FilledButton.icon(
+                onPressed: progressAsync.isLoading
+                    ? null
+                    : () async {
+                        await ref
+                            .read(workoutProgressProvider.notifier)
+                            .markCompleted(
+                              workoutId: workout.id,
+                              durationMinutes: workout.durationMinutes,
+                            );
+                        if (context.mounted) {
+                          context.showSnackBar('Treino marcado como concluído!');
+                        }
+                      },
+                icon: progressAsync.isLoading
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.check_circle_outline),
+                label: const Text('Marcar como concluído'),
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                  backgroundColor: AppColors.success,
+                ),
               ),
-            ),
           ],
         ),
       ),

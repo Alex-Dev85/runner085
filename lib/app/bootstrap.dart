@@ -6,6 +6,7 @@ import 'package:logger/logger.dart';
 import 'package:runner085/app/config/environment.dart';
 import 'package:runner085/app/config/firebase_options_dev.dart' as dev;
 import 'package:runner085/app/config/firebase_options_prod.dart' as prod;
+import 'package:runner085/core/services/notification_service.dart';
 
 final logger = Logger(
   printer: PrettyPrinter(
@@ -41,6 +42,11 @@ class AppBootstrap {
       await _initializeFirebase(env);
     } else {
       logger.w('App rodando em DEMO MODE — Firebase desabilitado');
+    }
+
+    // Inicializa o serviço de notificações (não-web).
+    if (!kIsWeb) {
+      await NotificationService.instance.initialize();
     }
 
     // Global error handling

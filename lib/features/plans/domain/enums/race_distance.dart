@@ -29,11 +29,13 @@ enum RaceDistance {
 enum RunnerLevel {
   beginner,
   intermediate,
-  advanced;
+  advanced,
+  elite;
 
   String get displayName => switch (this) {
         RunnerLevel.beginner => 'Iniciante',
         RunnerLevel.intermediate => 'Intermediário',
         RunnerLevel.advanced => 'Avançado',
+        RunnerLevel.elite => 'Elite',
       };
 }

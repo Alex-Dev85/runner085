@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:runner085/app/router/app_routes.dart';
 import 'package:runner085/app/router/shell_scaffold.dart';
 import 'package:runner085/features/auth/presentation/pages/login_page.dart';
+import 'package:runner085/features/auth/presentation/pages/signup_page.dart';
 import 'package:runner085/features/calendar/presentation/pages/calendar_page.dart';
 import 'package:runner085/features/home/presentation/pages/home_page.dart';
 import 'package:runner085/features/onboarding/presentation/pages/onboarding_page.dart';
@@ -12,6 +13,7 @@ import 'package:runner085/features/plans/presentation/pages/plan_detail_page.dar
 import 'package:runner085/features/plans/presentation/pages/plans_page.dart';
 import 'package:runner085/features/plans/presentation/pages/week_detail_page.dart';
 import 'package:runner085/features/plans/presentation/pages/workout_detail_page.dart';
+import 'package:runner085/features/progress/presentation/pages/history_page.dart';
 import 'package:runner085/features/profile/presentation/pages/profile_page.dart';
 import 'package:runner085/features/splash/presentation/pages/splash_page.dart';
 import 'package:runner085/features/training/presentation/pages/training_page.dart';
@@ -31,6 +33,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.login,
         name: 'login',
         builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.signup,
+        name: 'signup',
+        builder: (context, state) => const SignUpPage(),
       ),
       GoRoute(
         path: AppRoutes.onboarding,
@@ -72,6 +79,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
         ],
+      ),
+      GoRoute(
+        path: AppRoutes.history,
+        name: 'history',
+        builder: (context, state) => const HistoryPage(),
       ),
       ShellRoute(
         builder: (context, state, child) => ShellScaffold(child: child),

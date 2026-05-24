@@ -10,6 +10,7 @@ import 'package:runner085/features/plans/domain/entities/training_plan.dart';
 import 'package:runner085/features/plans/domain/enums/race_distance.dart';
 import 'package:runner085/features/plans/presentation/providers/plans_provider.dart';
 import 'package:runner085/features/plans/presentation/widgets/plan_card.dart';
+import 'package:runner085/features/plans/presentation/widgets/recommendation_section.dart';
 
 class PlansPage extends ConsumerWidget {
   const PlansPage({super.key});
@@ -39,6 +40,12 @@ class PlansPage extends ConsumerWidget {
             const _DistanceFilters(),
             const SizedBox(height: 8),
             const _LevelFilters(),
+            const SizedBox(height: 8),
+            // Recomendações automáticas (visíveis quando sem filtro ativo)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: RecommendationSection(),
+            ),
             const SizedBox(height: 8),
             Expanded(
               child: filteredAsync.when(

@@ -141,9 +141,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 ),
                 const SizedBox(height: 16),
                 TextButton(
-                  onPressed: () {
-                    // TODO: Navigate to sign up
-                  },
+                  onPressed: () => context.go(AppRoutes.signup),
                   child: const Text('Não tem conta? Cadastre-se'),
                 ),
               ],

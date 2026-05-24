@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:runner085/app/router/app_routes.dart';
 import 'package:runner085/core/providers/core_providers.dart';
+import 'package:runner085/features/onboarding/data/onboarding_repository.dart';
 
 class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
@@ -20,14 +21,22 @@ class _SplashPageState extends ConsumerState<SplashPage> {
   }
 
   Future<void> _navigate() async {
-    // Minimum splash duration for branding.
+    // Duração mínima para branding.
     await Future<void>.delayed(const Duration(seconds: 2));
     if (!mounted) return;
 
-    // Wait for the first auth state emission.
-    final user = await ref.read(authRepositoryProvider).currentUser;
+    final onboardingDone = await OnboardingRepository().isCompleted();
 
+    // Onboarding não concluído → sempre vai para onboarding primeiro.
+    if (!onboardingDone) {
+      if (mounted) context.go(AppRoutes.onboarding);
+      return;
+    }
+
+    // Onboarding concluído → verifica autenticação.
+    final user = await ref.read(authRepositoryProvider).currentUser;
     if (!mounted) return;
+
     if (user != null) {
       context.go(AppRoutes.home);
     } else {

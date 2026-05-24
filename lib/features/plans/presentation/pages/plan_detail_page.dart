@@ -8,6 +8,7 @@ import 'package:runner085/core/widgets/app_error_widget.dart';
 import 'package:runner085/core/widgets/app_loading.dart';
 import 'package:runner085/features/plans/domain/entities/training_plan.dart';
 import 'package:runner085/features/plans/domain/entities/training_week.dart';
+import 'package:runner085/features/plans/presentation/providers/active_plan_provider.dart';
 import 'package:runner085/features/plans/presentation/providers/plans_provider.dart';
 
 class PlanDetailPage extends ConsumerWidget {
@@ -52,14 +53,17 @@ class _NotFound extends StatelessWidget {
   }
 }
 
-class _PlanDetailContent extends StatelessWidget {
+class _PlanDetailContent extends ConsumerWidget {
   final TrainingPlan plan;
 
   const _PlanDetailContent({required this.plan});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final scheme = context.colorScheme;
+    final activePlanAsync = ref.watch(activePlanProvider);
+    final isActive = activePlanAsync.valueOrNull?.plan.id == plan.id;
+    final isLoading = activePlanAsync.isLoading;
     return CustomScrollView(
       slivers: [
         SliverAppBar.large(
@@ -146,6 +150,56 @@ class _PlanDetailContent extends StatelessWidget {
           },
         ),
         const SliverToBoxAdapter(child: SizedBox(height: 24)),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+            child: isActive
+                ? OutlinedButton.icon(
+                    onPressed: isLoading
+                        ? null
+                        : () async {
+                            await ref
+                                .read(activePlanProvider.notifier)
+                                .deactivate();
+                            if (context.mounted) {
+                              context.showSnackBar('Plano desativado.');
+                            }
+                          },
+                    icon: const Icon(Icons.stop_circle_outlined),
+                    label: const Text('Desativar plano'),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                      foregroundColor: scheme.error,
+                    ),
+                  )
+                : FilledButton.icon(
+                    onPressed: isLoading
+                        ? null
+                        : () async {
+                            await ref
+                                .read(activePlanProvider.notifier)
+                                .activate(plan.id);
+                            if (context.mounted) {
+                              context.showSnackBar(
+                                'Plano ativado! Veja seus treinos no Calendário.',
+                              );
+                              context.go(AppRoutes.calendar);
+                            }
+                          },
+                    icon: isLoading
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.play_circle_outline),
+                    label: const Text('Ativar este plano'),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                    ),
+                  ),
+          ),
+        ),
       ],
     );
   }

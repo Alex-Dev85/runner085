@@ -8,9 +8,3 @@ final activeWorkoutProvider = StateProvider<Workout?>((ref) => null);
 
 /// Provider for the selected training zone filter.
 final selectedZoneProvider = StateProvider<TrainingZone?>((ref) => null);
-
-/// Provider for today's scheduled workouts.
-/// TODO: derive from the user's active plan when persistence is implemented.
-final todayWorkoutsProvider = FutureProvider<List<Workout>>((ref) async {
-  return [];
-});
