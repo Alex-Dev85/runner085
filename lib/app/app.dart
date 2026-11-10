@@ -47,6 +47,17 @@ class _AppLifecycleObserverState extends ConsumerState<_AppLifecycleObserver>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // Reagenda ao abrir o app: corrige lembretes agendados antes com fuso
+    // errado e mantém o texto do treino do dia atualizado.
+    if (!kIsWeb) {
+      ref.read(notificationSettingsProvider.future).then((settings) {
+        if (!mounted || !settings.enabled) return;
+        NotificationService.instance.scheduleDailyReminder(
+          hour: settings.hour,
+          minute: settings.minute,
+        );
+      });
+    }
   }
 
   @override

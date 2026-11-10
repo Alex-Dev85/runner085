@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -23,8 +24,11 @@ class NotificationService {
   Future<void> initialize() async {
     if (_initialized) return;
 
-    // Inicializa fusos horários (necessário para notificações agendadas).
+    // Inicializa fusos horários (necessário para notificações agendadas) e
+    // usa o fuso do aparelho. Sem isso `tz.local` fica em UTC e o lembrete
+    // dispara deslocado (ex.: 17:29 virava 14:29 em Brasília).
     tz.initializeTimeZones();
+    await _setLocalTimezone();
 
     const androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -46,6 +50,16 @@ class NotificationService {
     );
 
     _initialized = true;
+  }
+
+  Future<void> _setLocalTimezone() async {
+    try {
+      final info = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(info.identifier));
+    } catch (e) {
+      // Fuso desconhecido pelo banco de dados: mantém UTC, mas registra.
+      debugPrint('NotificationService: fuso do aparelho indisponível ($e)');
+    }
   }
 
   void _onNotificationTap(NotificationResponse response) {
