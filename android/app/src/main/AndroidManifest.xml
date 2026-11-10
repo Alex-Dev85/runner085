@@ -1,9 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Notificações (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <!-- Alarmes exatos para agendamento de lembretes -->
+    <!-- Alarme exato para o lembrete, quando o usuário permitir (Android 14+
+         nega por padrão; aí o lembrete usa um alarme aproximado).
+         USE_EXACT_ALARM não é usado: a Play Store o reserva a apps de
+         despertador e agenda. -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <!-- Reiniciar alarmes após reboot -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 

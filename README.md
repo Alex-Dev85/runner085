@@ -65,14 +65,30 @@ flutter run -t lib/main_prod.dart    # ambiente PROD
 
 ### Modo demo (sem Firebase)
 
-Por padrão o app sobe em modo demo: login fake (qualquer credencial funciona)
-e sem chamadas ao Firebase. Para usar Firebase de verdade:
+Por padrão o app usa o Firebase (projeto dev em `firebase_options_dev.dart`).
+Para testar a interface sem backend, com login fake (qualquer credencial
+funciona) e dados só no aparelho:
 
-1. Rodar `flutterfire configure`
-2. Substituir os placeholders em `lib/app/config/firebase_options_dev.dart` e
-   `firebase_options_prod.dart`
-3. Em `lib/app/bootstrap.dart`, mudar `static const bool demoMode = true` para
-   `false`
+```bash
+flutter run --dart-define=DEMO_MODE=true
+```
+
+### Assinatura de release (Android)
+
+1. Gerar a chave de upload (guarde o arquivo e as senhas em local seguro —
+   sem eles não dá para publicar atualizações):
+
+   ```bash
+   keytool -genkey -v -keystore android/upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+   ```
+
+2. Copiar `android/key.properties.example` para `android/key.properties` e
+   preencher as senhas (ambos os arquivos `.jks` e `key.properties` ficam
+   fora do git).
+3. `flutter build appbundle -t lib/main_prod.dart`
+
+Sem `key.properties` o release é assinado com a chave de debug (serve para
+testar, mas a Play Store recusa) e o Gradle mostra um aviso.
 
 ## Status
 
@@ -84,6 +100,7 @@ e sem chamadas ao Firebase. Para usar Firebase de verdade:
 - [x] Progresso, sequência de dias e histórico de treinos
 - [x] Configurações (tema, unidade de distância, frequência semanal)
 - [x] Zonas de ritmo personalizadas pelo teste de 3 km
-- [ ] Dados separados por usuário (hoje plano, progresso e perfil são
-      globais no aparelho)
-- [ ] Integração real com Firebase
+- [x] Integração com Firebase (projeto dev)
+- [x] Dados e preferências separados por usuário (Firestore)
+- [ ] Firebase de produção (`firebase_options_prod.dart`)
+- [ ] Exclusão de conta e política de privacidade

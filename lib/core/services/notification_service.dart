@@ -165,11 +165,23 @@ class NotificationService {
       body,
       scheduledDate,
       details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: await _scheduleMode(),
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time, // repete diariamente
     );
+  }
+
+  /// Alarme exato quando o aparelho permite; senão, aproximado (o Android
+  /// pode atrasar alguns minutos). Sem essa checagem o agendamento falha
+  /// no Android 14+, que nega alarmes exatos por padrão.
+  Future<AndroidScheduleMode> _scheduleMode() async {
+    final android = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    final canExact = await android?.canScheduleExactNotifications() ?? true;
+    return canExact
+        ? AndroidScheduleMode.exactAllowWhileIdle
+        : AndroidScheduleMode.inexactAllowWhileIdle;
   }
 
   /// Envia uma notificação imediata informando o treino do dia.
