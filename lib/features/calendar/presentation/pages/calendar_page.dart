@@ -7,7 +7,6 @@ import 'package:runner085/app/theme/app_colors.dart';
 import 'package:runner085/core/utils/extensions.dart';
 import 'package:runner085/features/plans/domain/entities/workout.dart';
 import 'package:runner085/features/plans/presentation/providers/active_plan_provider.dart';
-import 'package:runner085/features/plans/presentation/providers/plans_provider.dart';
 import 'package:runner085/features/progress/presentation/providers/workout_progress_provider.dart';
 import 'package:runner085/features/settings/presentation/providers/app_settings_provider.dart';
 import 'package:runner085/features/training/presentation/providers/pace_zones_provider.dart';

@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:runner085/features/plans/presentation/providers/active_plan_provider.dart';
 import 'package:runner085/features/progress/data/workout_progress_repository.dart';
 
 // ── Repositório ───────────────────────────────────────────────────────────────

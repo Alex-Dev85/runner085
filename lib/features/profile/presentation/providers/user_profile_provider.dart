@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:runner085/core/domain/entities/user_entity.dart';
 import 'package:runner085/features/auth/presentation/providers/auth_provider.dart';
 import 'package:runner085/features/plans/domain/enums/race_distance.dart';
 import 'package:runner085/features/profile/data/user_profile_repository.dart';

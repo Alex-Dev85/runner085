@@ -78,7 +78,12 @@ e sem chamadas ao Firebase. Para usar Firebase de verdade:
 
 - [x] Setup inicial, navegação, theme, splash, login, onboarding
 - [x] Módulo de planos com 12 planos mockados
-- [ ] Calendário com plano ativo
-- [ ] Persistência local (SharedPreferences) do plano selecionado
-- [ ] Recomendação automática de plano baseada no perfil
+- [x] Calendário com plano ativo
+- [x] Persistência local (SharedPreferences) do plano selecionado
+- [x] Recomendação automática de plano baseada no perfil
+- [x] Progresso, sequência de dias e histórico de treinos
+- [x] Configurações (tema, unidade de distância, frequência semanal)
+- [x] Zonas de ritmo personalizadas pelo teste de 3 km
+- [ ] Dados separados por usuário (hoje plano, progresso e perfil são
+      globais no aparelho)
 - [ ] Integração real com Firebase

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:runner085/features/plans/domain/entities/workout.dart';
 import 'package:runner085/features/plans/presentation/providers/active_plan_provider.dart';
 import 'package:runner085/features/progress/domain/history_entry.dart';
 import 'package:runner085/features/progress/presentation/providers/workout_progress_provider.dart';
@@ -14,7 +15,7 @@ final historyProvider = Provider<List<HistoryEntry>>((ref) {
   if (progress.completedDates.isEmpty) return [];
 
   // Monta um mapa rápido workoutId → Workout a partir de todas as semanas.
-  final workoutMap = <String, dynamic>{};
+  final workoutMap = <String, Workout>{};
   for (final week in activePlan.plan.weeks) {
     for (final workout in week.workouts) {
       workoutMap[workout.id] = workout;

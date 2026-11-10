@@ -11,7 +11,6 @@ import 'package:runner085/features/auth/presentation/providers/auth_provider.dar
 import 'package:runner085/features/notifications/presentation/widgets/notification_settings_tile.dart';
 import 'package:runner085/features/plans/domain/enums/race_distance.dart';
 import 'package:runner085/features/plans/presentation/providers/active_plan_provider.dart';
-import 'package:runner085/features/plans/presentation/widgets/recommendation_section.dart';
 import 'package:runner085/features/profile/presentation/providers/user_profile_provider.dart';
 import 'package:runner085/features/progress/presentation/providers/workout_progress_provider.dart';
 
