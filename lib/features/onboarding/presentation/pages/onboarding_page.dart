@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -145,6 +147,31 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   }
 }
 
+/// Ocupa a altura toda quando há espaço (os `Spacer`s distribuem o
+/// conteúdo) e vira rolagem quando a tela é baixa ou o teclado está aberto,
+/// em vez de estourar o layout.
+class _FillOrScroll extends StatelessWidget {
+  final EdgeInsets padding;
+  final Widget child;
+
+  const _FillOrScroll({required this.padding, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        padding: padding,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight: math.max(0, constraints.maxHeight - padding.vertical),
+          ),
+          child: IntrinsicHeight(child: child),
+        ),
+      ),
+    );
+  }
+}
+
 // ── Página 1: Boas-vindas ─────────────────────────────────────────────────────
 
 class _WelcomePage extends StatelessWidget {
@@ -154,7 +181,7 @@ class _WelcomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return _FillOrScroll(
       padding: const EdgeInsets.all(32),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -598,7 +625,7 @@ class _ReadyPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return _FillOrScroll(
       padding: const EdgeInsets.all(32),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

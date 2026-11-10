@@ -10,13 +10,14 @@ class FakeAuthRepository implements AuthRepository {
   final _controller = StreamController<UserEntity?>.broadcast();
   UserEntity? _currentUser;
 
-  FakeAuthRepository() {
-    // Emit the initial state (logged out).
-    Future<void>.microtask(() => _controller.add(null));
-  }
-
+  /// Como o Firebase Auth: cada novo ouvinte recebe primeiro o usuário
+  /// atual e depois as mudanças. (Antes, quem assinava depois do login não
+  /// recebia o usuário e ficava sem uid.)
   @override
-  Stream<UserEntity?> get authStateChanges => _controller.stream;
+  Stream<UserEntity?> get authStateChanges async* {
+    yield _currentUser;
+    yield* _controller.stream;
+  }
 
   @override
   Future<UserEntity?> get currentUser async => _currentUser;

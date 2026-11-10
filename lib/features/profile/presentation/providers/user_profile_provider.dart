@@ -1,13 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:runner085/core/providers/user_data_providers.dart';
 import 'package:runner085/features/auth/presentation/providers/auth_provider.dart';
 import 'package:runner085/features/plans/domain/enums/race_distance.dart';
 import 'package:runner085/features/profile/data/user_profile_repository.dart';
 
 // ── Repositório ──────────────────────────────────────────────────────────────
 
+/// Recriado quando a conta muda (depende do armazenamento do usuário).
 final userProfileRepositoryProvider = Provider<UserProfileRepository>((ref) {
-  return UserProfileRepository();
+  return UserProfileRepository(ref.watch(userDataStoreProvider));
 });
 
 // ── Estado do perfil ─────────────────────────────────────────────────────────
@@ -40,9 +42,10 @@ class UserProfile {
 class UserProfileNotifier extends AsyncNotifier<UserProfile> {
   @override
   Future<UserProfile> build() async {
-    final repo = ref.read(userProfileRepositoryProvider);
+    // watch: recarrega o perfil ao trocar de conta.
+    final repo = ref.watch(userProfileRepositoryProvider);
 
-    // Tenta carregar do SharedPreferences primeiro.
+    // Tenta carregar o perfil salvo do usuário primeiro.
     final savedLevel = await repo.getLevel();
     final savedGoal = await repo.getGoalDistance();
 

@@ -1,12 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:runner085/core/providers/user_data_providers.dart';
 import 'package:runner085/features/progress/data/workout_progress_repository.dart';
 
 // ── Repositório ───────────────────────────────────────────────────────────────
 
+/// Recriado quando a conta muda (depende do armazenamento do usuário).
 final workoutProgressRepositoryProvider =
     Provider<WorkoutProgressRepository>((ref) {
-  return WorkoutProgressRepository();
+  return WorkoutProgressRepository(ref.watch(userDataStoreProvider));
 });
 
 // ── Estado ────────────────────────────────────────────────────────────────────
@@ -77,6 +79,8 @@ class WorkoutProgressNotifier
     extends AsyncNotifier<WorkoutProgressState> {
   @override
   Future<WorkoutProgressState> build() async {
+    // watch: recarrega o progresso ao trocar de conta.
+    ref.watch(workoutProgressRepositoryProvider);
     return _load();
   }
 

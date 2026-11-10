@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:runner085/core/data/user_data/user_data_store.dart';
+import 'package:runner085/core/providers/user_data_providers.dart';
 import 'package:runner085/features/plans/domain/enums/training_zone.dart';
 import 'package:runner085/features/settings/domain/distance_unit.dart';
 import 'package:runner085/features/training/domain/pace_zones.dart';
@@ -56,7 +58,13 @@ void main() {
     setUp(() => SharedPreferences.setMockInitialValues({}));
 
     test('salva, recarrega e remove o teste', () async {
-      final container = ProviderContainer();
+      ProviderContainer newContainer() => ProviderContainer(
+            overrides: [
+              userDataStoreProvider
+                  .overrideWithValue(LocalUserDataStore(uid: 'u1')),
+            ],
+          );
+      final container = newContainer();
       addTearDown(container.dispose);
 
       expect(await container.read(paceZonesProvider.future), isNull);
@@ -64,7 +72,7 @@ void main() {
       await container.read(paceZonesProvider.notifier).saveTest(1080);
       expect(container.read(paceZonesProvider).value?.testSeconds, 1080);
 
-      final fresh = ProviderContainer();
+      final fresh = newContainer();
       addTearDown(fresh.dispose);
       expect((await fresh.read(paceZonesProvider.future))?.testSeconds, 1080);
 

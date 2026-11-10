@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:runner085/core/data/user_data/user_data_store.dart';
 import 'package:runner085/features/progress/data/workout_progress_repository.dart';
 
 void main() {
@@ -10,7 +11,7 @@ void main() {
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
-    repo = WorkoutProgressRepository();
+    repo = WorkoutProgressRepository(LocalUserDataStore(uid: 'u1'));
   });
 
   test('começa vazio', () async {

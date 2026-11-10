@@ -1,19 +1,20 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:runner085/core/providers/user_data_providers.dart';
 import 'package:runner085/features/notifications/presentation/providers/notification_settings_provider.dart';
 import 'package:runner085/features/plans/data/repositories/active_plan_repository_impl.dart';
 import 'package:runner085/features/plans/domain/entities/active_plan.dart';
 import 'package:runner085/features/plans/domain/entities/workout.dart';
 import 'package:runner085/features/plans/domain/repositories/active_plan_repository.dart';
 import 'package:runner085/features/plans/presentation/providers/plans_provider.dart';
-import 'package:runner085/features/progress/data/workout_progress_repository.dart';
 import 'package:runner085/features/progress/presentation/providers/workout_progress_provider.dart';
 
 // ── Repositório ──────────────────────────────────────────────────────────────
 
+/// Recriado quando a conta muda (depende do armazenamento do usuário).
 final activePlanRepositoryProvider = Provider<ActivePlanRepository>((ref) {
-  return ActivePlanRepositoryImpl();
+  return ActivePlanRepositoryImpl(ref.watch(userDataStoreProvider));
 });
 
 // ── Notifier ─────────────────────────────────────────────────────────────────
@@ -21,6 +22,8 @@ final activePlanRepositoryProvider = Provider<ActivePlanRepository>((ref) {
 class ActivePlanNotifier extends AsyncNotifier<ActivePlan?> {
   @override
   Future<ActivePlan?> build() async {
+    // watch: recarrega o plano ao trocar de conta.
+    ref.watch(activePlanRepositoryProvider);
     return _load();
   }
 
@@ -45,7 +48,7 @@ class ActivePlanNotifier extends AsyncNotifier<ActivePlan?> {
     final today = DateTime.now();
     final startDate = DateTime(today.year, today.month, today.day);
     await repo.setActivePlan(planId, startDate);
-    await WorkoutProgressRepository().clearAll();
+    await ref.read(workoutProgressRepositoryProvider).clearAll();
     // Garante que o progresso em memória reflita a limpeza.
     ref.invalidate(workoutProgressProvider);
     final loaded = await _load();

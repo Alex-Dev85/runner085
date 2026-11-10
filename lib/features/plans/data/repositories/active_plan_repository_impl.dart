@@ -1,36 +1,35 @@
-import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:runner085/core/data/user_data/user_data_store.dart';
 import 'package:runner085/features/plans/domain/repositories/active_plan_repository.dart';
 
+/// Plano ativo do usuário, no documento `active_plan`:
+/// `{ planId: String, startDate: ISO-8601 }`.
 class ActivePlanRepositoryImpl implements ActivePlanRepository {
-  static const String _keyPlanId = 'active_plan_id';
-  static const String _keyStartDate = 'active_plan_start_date';
+  static const doc = 'active_plan';
+
+  final UserDataStore _store;
+
+  ActivePlanRepositoryImpl(this._store);
 
   @override
   Future<String?> getActivePlanId() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_keyPlanId);
+    final data = await _store.read(doc);
+    return data?['planId'] as String?;
   }
 
   @override
   Future<DateTime?> getStartDate() async {
-    final prefs = await SharedPreferences.getInstance();
-    final ms = prefs.getInt(_keyStartDate);
-    if (ms == null) return null;
-    return DateTime.fromMillisecondsSinceEpoch(ms);
+    final raw = (await _store.read(doc))?['startDate'] as String?;
+    return raw == null ? null : DateTime.tryParse(raw);
   }
 
   @override
-  Future<void> setActivePlan(String planId, DateTime startDate) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_keyPlanId, planId);
-    await prefs.setInt(_keyStartDate, startDate.millisecondsSinceEpoch);
+  Future<void> setActivePlan(String planId, DateTime startDate) {
+    return _store.write(doc, {
+      'planId': planId,
+      'startDate': startDate.toIso8601String(),
+    });
   }
 
   @override
-  Future<void> clearActivePlan() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_keyPlanId);
-    await prefs.remove(_keyStartDate);
-  }
+  Future<void> clearActivePlan() => _store.delete(doc);
 }

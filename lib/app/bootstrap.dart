@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -63,6 +64,14 @@ class AppBootstrap {
     };
 
     await Firebase.initializeApp(options: options);
+
+    // Cache offline do Firestore: dados do usuário abrem na hora e
+    // escritas feitas sem conexão sincronizam depois. No Android/iOS já vem
+    // ligado; na web precisa ser ativado.
+    if (kIsWeb) {
+      FirebaseFirestore.instance.settings =
+          const Settings(persistenceEnabled: true);
+    }
   }
 
   static void _setupErrorHandling() {
