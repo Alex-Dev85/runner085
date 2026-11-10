@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:runner085/app/router/app_routes.dart';
 import 'package:runner085/app/theme/app_colors.dart';
+import 'package:runner085/core/providers/core_providers.dart';
 import 'package:runner085/core/utils/extensions.dart';
 import 'package:runner085/features/onboarding/data/onboarding_repository.dart';
 import 'package:runner085/features/plans/domain/enums/race_distance.dart';
@@ -47,8 +48,14 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           level: _selectedLevel,
           goalDistance: _selectedDistance,
         );
-    await OnboardingRepository().markCompleted();
+    await _markCompleted();
     if (mounted) context.go(AppRoutes.home);
+  }
+
+  /// Marca o onboarding como concluído para o usuário autenticado.
+  Future<void> _markCompleted() async {
+    final user = await ref.read(authRepositoryProvider).currentUser;
+    await OnboardingRepository().markCompleted(userId: user?.id);
   }
 
   Future<void> _skip() async {
@@ -57,7 +64,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           level: RunnerLevel.beginner,
           goalDistance: RaceDistance.fiveKm,
         );
-    await OnboardingRepository().markCompleted();
+    await _markCompleted();
     if (mounted) context.go(AppRoutes.home);
   }
 

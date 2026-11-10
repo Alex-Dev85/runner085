@@ -10,6 +10,7 @@ import 'package:runner085/features/plans/domain/entities/training_plan.dart';
 import 'package:runner085/features/plans/domain/entities/training_week.dart';
 import 'package:runner085/features/plans/presentation/providers/plans_provider.dart';
 import 'package:runner085/features/plans/presentation/widgets/workout_tile.dart';
+import 'package:runner085/features/settings/presentation/providers/app_settings_provider.dart';
 
 class WeekDetailPage extends ConsumerWidget {
   final String planId;
@@ -51,14 +52,15 @@ class WeekDetailPage extends ConsumerWidget {
   }
 }
 
-class _WeekContent extends StatelessWidget {
+class _WeekContent extends ConsumerWidget {
   final TrainingPlan plan;
   final TrainingWeek week;
 
   const _WeekContent({required this.plan, required this.week});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unit = ref.watch(distanceUnitProvider);
     return Scaffold(
       appBar: AppBar(
         title: Text('Semana ${week.number}'),
@@ -107,7 +109,7 @@ class _WeekContent extends StatelessWidget {
                       const SizedBox(width: 16),
                       _InlineStat(
                         icon: Icons.straighten,
-                        label: '${week.totalKm.toStringAsFixed(0)} km',
+                        label: unit.format(week.totalKm, decimals: 0),
                       ),
                       const SizedBox(width: 16),
                       _InlineStat(

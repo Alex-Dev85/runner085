@@ -15,6 +15,7 @@ import 'package:runner085/features/plans/presentation/pages/week_detail_page.dar
 import 'package:runner085/features/plans/presentation/pages/workout_detail_page.dart';
 import 'package:runner085/features/progress/presentation/pages/history_page.dart';
 import 'package:runner085/features/profile/presentation/pages/profile_page.dart';
+import 'package:runner085/features/settings/presentation/pages/settings_page.dart';
 import 'package:runner085/features/splash/presentation/pages/splash_page.dart';
 import 'package:runner085/features/training/presentation/pages/training_page.dart';
 
@@ -27,22 +28,26 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.splash,
         name: 'splash',
-        builder: (context, state) => const SplashPage(),
+        pageBuilder: (context, state) =>
+            _fadePage(state, const SplashPage()),
       ),
       GoRoute(
         path: AppRoutes.login,
         name: 'login',
-        builder: (context, state) => const LoginPage(),
+        pageBuilder: (context, state) =>
+            _fadePage(state, const LoginPage()),
       ),
       GoRoute(
         path: AppRoutes.signup,
         name: 'signup',
-        builder: (context, state) => const SignUpPage(),
+        pageBuilder: (context, state) =>
+            _fadePage(state, const SignUpPage()),
       ),
       GoRoute(
         path: AppRoutes.onboarding,
         name: 'onboarding',
-        builder: (context, state) => const OnboardingPage(),
+        pageBuilder: (context, state) =>
+            _fadePage(state, const OnboardingPage()),
       ),
       // Plans detail routes (outside the shell so they don't show bottom nav)
       GoRoute(
@@ -85,39 +90,67 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'history',
         builder: (context, state) => const HistoryPage(),
       ),
+      GoRoute(
+        path: AppRoutes.settings,
+        name: 'settings',
+        builder: (context, state) => const SettingsPage(),
+      ),
       ShellRoute(
         builder: (context, state, child) => ShellScaffold(child: child),
         routes: [
           GoRoute(
             path: AppRoutes.home,
             name: 'home',
-            builder: (context, state) => const HomePage(),
+            pageBuilder: (context, state) =>
+                _fadePage(state, const HomePage()),
           ),
           GoRoute(
             path: AppRoutes.plans,
             name: 'plans',
-            builder: (context, state) => const PlansPage(),
+            pageBuilder: (context, state) =>
+                _fadePage(state, const PlansPage()),
           ),
           GoRoute(
             path: AppRoutes.training,
             name: 'training',
-            builder: (context, state) => const TrainingPage(),
+            pageBuilder: (context, state) =>
+                _fadePage(state, const TrainingPage()),
           ),
           GoRoute(
             path: AppRoutes.calendar,
             name: 'calendar',
-            builder: (context, state) => const CalendarPage(),
+            pageBuilder: (context, state) =>
+                _fadePage(state, const CalendarPage()),
           ),
           GoRoute(
             path: AppRoutes.profile,
             name: 'profile',
-            builder: (context, state) => const ProfilePage(),
+            pageBuilder: (context, state) =>
+                _fadePage(state, const ProfilePage()),
           ),
         ],
       ),
     ],
   );
 });
+
+/// Transição em fade usada nas abas e no fluxo de entrada (splash, login,
+/// cadastro, onboarding). As telas de detalhe mantêm a transição nativa da
+/// plataforma, preservando o gesto de voltar do iOS.
+CustomTransitionPage<void> _fadePage(GoRouterState state, Widget child) {
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    child: child,
+    transitionDuration: const Duration(milliseconds: 220),
+    reverseTransitionDuration: const Duration(milliseconds: 180),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      return FadeTransition(
+        opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+        child: child,
+      );
+    },
+  );
+}
 
 class _ErrorPage extends StatelessWidget {
   const _ErrorPage();

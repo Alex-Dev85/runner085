@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:runner085/app/providers/theme_provider.dart';
 import 'package:runner085/app/router/app_routes.dart';
 import 'package:runner085/app/theme/app_colors.dart';
+import 'package:runner085/core/utils/constants.dart';
 import 'package:runner085/core/utils/extensions.dart';
 import 'package:runner085/features/auth/presentation/providers/auth_provider.dart';
 import 'package:runner085/features/notifications/presentation/widgets/notification_settings_tile.dart';
@@ -97,7 +98,7 @@ class ProfilePage extends ConsumerWidget {
                 context,
                 icon: Icons.settings,
                 title: 'Configurações',
-                onTap: () {},
+                onTap: () => context.push(AppRoutes.settings),
               ),
               _buildMenuItem(
                 context,
@@ -109,7 +110,16 @@ class ProfilePage extends ConsumerWidget {
                 context,
                 icon: Icons.info_outline,
                 title: 'Sobre',
-                onTap: () {},
+                onTap: () => showAboutDialog(
+                  context: context,
+                  applicationName: AppConstants.appName,
+                  applicationVersion: AppConstants.appVersion,
+                  applicationIcon: Icon(
+                    Icons.directions_run,
+                    size: 40,
+                    color: context.colorScheme.primary,
+                  ),
+                ),
               ),
               const SizedBox(height: 16),
               SizedBox(
@@ -157,6 +167,8 @@ class ProfilePage extends ConsumerWidget {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      useRootNavigator: true,
+      useSafeArea: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),

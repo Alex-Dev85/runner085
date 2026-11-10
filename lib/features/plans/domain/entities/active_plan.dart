@@ -41,12 +41,20 @@ class ActivePlan {
       final week = plan.weeks[weekIdx];
       for (final workout in week.workouts) {
         if (workout.isRest) continue;
-        // Calcula a data real: startDate + semanas + ajuste de dia da semana
-        final weekStart = startDate.add(Duration(days: weekIdx * 7));
-        // Ajusta para o dia correto dentro da semana
-        final diff = workout.dayOfWeek - weekStart.weekday;
-        final trainingDate = weekStart.add(Duration(days: diff));
-        days.add(_dateOnly(trainingDate));
+        // Cada "semana" do plano é uma janela de 7 dias a partir de
+        // startDate (mesma regra de workoutForDate).
+        final weekStart = DateTime(
+          startDate.year,
+          startDate.month,
+          startDate.day + weekIdx * 7,
+        );
+        // Próxima ocorrência do dia da semana dentro da janela. O módulo
+        // evita datas anteriores ao início quando o plano começa no meio
+        // da semana.
+        final diff = (workout.dayOfWeek - weekStart.weekday) % 7;
+        days.add(
+          DateTime(weekStart.year, weekStart.month, weekStart.day + diff),
+        );
       }
     }
     return days;

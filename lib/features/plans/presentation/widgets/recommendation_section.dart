@@ -63,7 +63,9 @@ class RecommendationSection extends ConsumerWidget {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
+      useRootNavigator: true,
+      useSafeArea: true,
+      shape:const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (_) => ProviderScope(

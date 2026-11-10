@@ -9,6 +9,8 @@ import 'package:runner085/features/plans/domain/entities/workout.dart';
 import 'package:runner085/features/plans/presentation/providers/active_plan_provider.dart';
 import 'package:runner085/features/plans/presentation/providers/plans_provider.dart';
 import 'package:runner085/features/progress/presentation/providers/workout_progress_provider.dart';
+import 'package:runner085/features/settings/presentation/providers/app_settings_provider.dart';
+import 'package:runner085/features/training/presentation/providers/pace_zones_provider.dart';
 
 class CalendarPage extends ConsumerStatefulWidget {
   const CalendarPage({super.key});
@@ -500,9 +502,17 @@ class _WorkoutCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final unit = ref.watch(distanceUnitProvider);
     final isCompleted = ref.watch(isWorkoutCompletedProvider(workout.id));
     final progressAsync = ref.watch(workoutProgressProvider);
     final isLoading = progressAsync.isLoading;
+    final pace = workout.isRest
+        ? null
+        : ref
+            .watch(paceZonesProvider)
+            .valueOrNull
+            ?.rangeFor(workout.zone)
+            .format(unit);
 
     return Card(
       child: Padding(
@@ -575,20 +585,24 @@ class _WorkoutCard extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             // Métricas
-            Row(
+            Wrap(
+              spacing: 16,
+              runSpacing: 6,
               children: [
                 _Metric(
                   icon: Icons.timer_outlined,
                   value: '${workout.durationMinutes} min',
                 ),
-                if (workout.distanceKm != null) ...[
-                  const SizedBox(width: 16),
+                if (workout.distanceKm != null)
                   _Metric(
                     icon: Icons.straighten,
-                    value: '${workout.distanceKm!.toStringAsFixed(1)} km',
+                    value: unit.format(workout.distanceKm!),
                   ),
-                ],
-                const SizedBox(width: 16),
+                if (pace != null)
+                  _Metric(
+                    icon: Icons.speed,
+                    value: '${workout.zone.label} • $pace',
+                  ),
                 _Metric(
                   icon: Icons.favorite_outline,
                   value: workout.zone.hrRange,

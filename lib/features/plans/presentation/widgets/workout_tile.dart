@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:runner085/core/utils/extensions.dart';
 import 'package:runner085/features/plans/domain/entities/workout.dart';
+import 'package:runner085/features/settings/presentation/providers/app_settings_provider.dart';
 
-class WorkoutTile extends StatelessWidget {
+class WorkoutTile extends ConsumerWidget {
   final Workout workout;
   final VoidCallback? onTap;
 
   const WorkoutTile({super.key, required this.workout, this.onTap});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unit = ref.watch(distanceUnitProvider);
     final scheme = context.colorScheme;
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -87,7 +90,7 @@ class WorkoutTile extends StatelessWidget {
                   ),
                   if (workout.distanceKm != null)
                     Text(
-                      '${workout.distanceKm!.toStringAsFixed(1)} km',
+                      unit.format(workout.distanceKm!),
                       style: context.textTheme.labelSmall?.copyWith(
                         color: scheme.onSurfaceVariant,
                       ),

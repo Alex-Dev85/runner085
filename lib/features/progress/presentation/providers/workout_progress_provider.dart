@@ -36,6 +36,21 @@ class WorkoutProgressState {
 
   bool isCompleted(String workoutId) => completedIds.contains(workoutId);
 
+  /// Sequência ainda válida em [now]: continua valendo se o último treino
+  /// foi hoje ou ontem; caso contrário a sequência foi perdida e vale 0.
+  int currentStreak(DateTime now) {
+    final last = lastTrainingDate;
+    if (last == null) return 0;
+    final daysSinceLast = DateTime.utc(now.year, now.month, now.day)
+        .difference(DateTime.utc(last.year, last.month, last.day))
+        .inDays;
+    return daysSinceLast <= 1 ? streakDays : 0;
+  }
+
+  /// Havia uma sequência registrada, mas ela foi perdida.
+  bool isStreakBroken(DateTime now) =>
+      streakDays > 0 && lastTrainingDate != null && currentStreak(now) == 0;
+
   /// Percentual de conclusão em relação ao total de sessões do plano.
   double completionPercent(int totalSessions) =>
       totalSessions > 0 ? (completedIds.length / totalSessions) * 100 : 0;

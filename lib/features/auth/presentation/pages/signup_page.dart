@@ -6,6 +6,7 @@ import 'package:runner085/app/router/app_routes.dart';
 import 'package:runner085/core/utils/constants.dart';
 import 'package:runner085/core/utils/extensions.dart';
 import 'package:runner085/features/auth/presentation/providers/auth_provider.dart';
+import 'package:runner085/features/onboarding/data/onboarding_repository.dart';
 
 class SignUpPage extends ConsumerStatefulWidget {
   const SignUpPage({super.key});
@@ -48,13 +49,20 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
     if (!mounted) return;
     setState(() => _isLoading = false);
 
-    result.when(
-      success: (_) => context.go(AppRoutes.home),
-      failure: (failure) => context.showSnackBar(
-        failure.message,
+    final user = result.dataOrNull;
+    if (user == null) {
+      context.showSnackBar(
+        result.failureOrNull?.message ?? 'Erro ao criar conta',
         isError: true,
-      ),
-    );
+      );
+      return;
+    }
+
+    // Conta nova (ou que ainda não passou pelo onboarding) → onboarding.
+    final onboardingDone =
+        await OnboardingRepository().isCompleted(userId: user.id);
+    if (!mounted) return;
+    context.go(onboardingDone ? AppRoutes.home : AppRoutes.onboarding);
   }
 
   @override

@@ -25,23 +25,21 @@ class _SplashPageState extends ConsumerState<SplashPage> {
     await Future<void>.delayed(const Duration(seconds: 2));
     if (!mounted) return;
 
-    final onboardingDone = await OnboardingRepository().isCompleted();
-
-    // Onboarding não concluído → sempre vai para onboarding primeiro.
-    if (!onboardingDone) {
-      if (mounted) context.go(AppRoutes.onboarding);
-      return;
-    }
-
-    // Onboarding concluído → verifica autenticação.
+    // Sem usuário autenticado → login.
     final user = await ref.read(authRepositoryProvider).currentUser;
     if (!mounted) return;
 
-    if (user != null) {
-      context.go(AppRoutes.home);
-    } else {
+    if (user == null) {
       context.go(AppRoutes.login);
+      return;
     }
+
+    // O onboarding é por usuário: cada conta passa por ele uma vez.
+    final onboardingDone =
+        await OnboardingRepository().isCompleted(userId: user.id);
+    if (!mounted) return;
+
+    context.go(onboardingDone ? AppRoutes.home : AppRoutes.onboarding);
   }
 
   @override

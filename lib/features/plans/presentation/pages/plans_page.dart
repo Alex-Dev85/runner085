@@ -23,53 +23,76 @@ class PlansPage extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Planos de Treino'),
       ),
+      // Página inteira em uma única rolagem: cabeçalho, filtros e
+      // recomendações rolam junto com a lista de planos.
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: Text(
-                'Escolha seu desafio',
-                style: context.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: Text(
+                  'Escolha seu desafio',
+                  style: context.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 12),
-            const _DistanceFilters(),
-            const SizedBox(height: 8),
-            const _LevelFilters(),
-            const SizedBox(height: 8),
-            // Recomendações automáticas (visíveis quando sem filtro ativo)
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: RecommendationSection(),
+            const SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 12),
+                  _DistanceFilters(),
+                  SizedBox(height: 8),
+                  _LevelFilters(),
+                  SizedBox(height: 8),
+                  // Recomendações automáticas (visíveis quando sem filtro ativo)
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: RecommendationSection(),
+                  ),
+                  SizedBox(height: 8),
+                ],
+              ),
             ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: filteredAsync.when(
-                data: (plans) {
-                  if (plans.isEmpty) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Text(
-                          'Nenhum plano para esses filtros.',
-                          style: context.textTheme.bodyLarge,
-                          textAlign: TextAlign.center,
+            ...filteredAsync.when(
+              data: (plans) {
+                if (plans.isEmpty) {
+                  return [
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Text(
+                            'Nenhum plano para esses filtros.',
+                            style: context.textTheme.bodyLarge,
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                       ),
-                    );
-                  }
-                  return _PlansList(plans: plans);
-                },
-                loading: () => const AppLoading(),
-                error: (e, _) => AppErrorWidget(
-                  message: 'Erro ao carregar planos: $e',
-                  onRetry: () => ref.invalidate(plansProvider),
+                    ),
+                  ];
+                }
+                return [_PlansList(plans: plans)];
+              },
+              loading: () => const [
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: AppLoading(),
                 ),
-              ),
+              ],
+              error: (e, _) => [
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: AppErrorWidget(
+                    message: 'Erro ao carregar planos: $e',
+                    onRetry: () => ref.invalidate(plansProvider),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -171,17 +194,19 @@ class _PlansList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: plans.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        final plan = plans[index];
-        return PlanCard(
-          plan: plan,
-          onTap: () => context.push('${AppRoutes.plans}/${plan.id}'),
-        );
-      },
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      sliver: SliverList.separated(
+        itemCount: plans.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          final plan = plans[index];
+          return PlanCard(
+            plan: plan,
+            onTap: () => context.push('${AppRoutes.plans}/${plan.id}'),
+          );
+        },
+      ),
     );
   }
 }

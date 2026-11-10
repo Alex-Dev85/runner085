@@ -8,6 +8,7 @@ import 'package:runner085/features/plans/domain/entities/workout.dart';
 import 'package:runner085/features/plans/domain/repositories/active_plan_repository.dart';
 import 'package:runner085/features/plans/presentation/providers/plans_provider.dart';
 import 'package:runner085/features/progress/data/workout_progress_repository.dart';
+import 'package:runner085/features/progress/presentation/providers/workout_progress_provider.dart';
 
 // ── Repositório ──────────────────────────────────────────────────────────────
 
@@ -45,6 +46,8 @@ class ActivePlanNotifier extends AsyncNotifier<ActivePlan?> {
     final startDate = DateTime(today.year, today.month, today.day);
     await repo.setActivePlan(planId, startDate);
     await WorkoutProgressRepository().clearAll();
+    // Garante que o progresso em memória reflita a limpeza.
+    ref.invalidate(workoutProgressProvider);
     final loaded = await _load();
     state = AsyncValue.data(loaded);
     if (!kIsWeb) {

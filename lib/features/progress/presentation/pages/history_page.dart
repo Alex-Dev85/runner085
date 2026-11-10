@@ -8,6 +8,7 @@ import 'package:runner085/features/plans/presentation/providers/active_plan_prov
 import 'package:runner085/features/progress/domain/history_entry.dart';
 import 'package:runner085/features/progress/presentation/providers/history_provider.dart';
 import 'package:runner085/features/progress/presentation/providers/workout_progress_provider.dart';
+import 'package:runner085/features/settings/presentation/providers/app_settings_provider.dart';
 
 class HistoryPage extends ConsumerWidget {
   const HistoryPage({super.key});
@@ -270,6 +271,7 @@ class _HistoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final unit = ref.watch(distanceUnitProvider);
     final workout = entry.workout;
     final date = entry.completedAt;
 
@@ -335,8 +337,7 @@ class _HistoryCard extends StatelessWidget {
                       if (workout.distanceKm != null)
                         _Chip(
                           icon: Icons.straighten,
-                          label:
-                              '${workout.distanceKm!.toStringAsFixed(1)} km',
+                          label: unit.format(workout.distanceKm!),
                         ),
                       _Chip(
                         icon: Icons.favorite_outline,

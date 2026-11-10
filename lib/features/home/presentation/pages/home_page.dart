@@ -6,9 +6,12 @@ import 'package:runner085/app/router/app_routes.dart';
 import 'package:runner085/app/theme/app_colors.dart';
 import 'package:runner085/core/utils/extensions.dart';
 import 'package:runner085/features/auth/presentation/providers/auth_provider.dart';
+import 'package:runner085/features/home/presentation/widgets/week_overview_card.dart';
 import 'package:runner085/features/plans/presentation/providers/active_plan_provider.dart';
 import 'package:runner085/features/plans/presentation/widgets/recommendation_section.dart';
 import 'package:runner085/features/progress/presentation/providers/workout_progress_provider.dart';
+import 'package:runner085/features/settings/presentation/providers/app_settings_provider.dart';
+import 'package:runner085/features/training/presentation/providers/pace_zones_provider.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -74,16 +77,26 @@ class HomePage extends ConsumerWidget {
                 final isCompleted = progressAsync.valueOrNull
                         ?.isCompleted(todayWorkout.id) ??
                     false;
+                final pace = ref
+                    .watch(paceZonesProvider)
+                    .valueOrNull
+                    ?.rangeFor(todayWorkout.zone)
+                    .format(ref.watch(distanceUnitProvider));
                 return _TodayWorkoutCard(
                   title: todayWorkout.title,
                   subtitle:
-                      '${todayWorkout.durationMinutes} min  •  ${todayWorkout.type.displayName}',
+                      '${todayWorkout.durationMinutes} min  •  ${todayWorkout.type.displayName}'
+                      '\n${todayWorkout.zone.label} ${todayWorkout.zone.displayName}'
+                      '${pace != null ? '  •  $pace' : ''}',
                   isCompleted: isCompleted,
                   onTap: () => context.go(AppRoutes.calendar),
                 );
               },
             ),
             const SizedBox(height: 12),
+
+            // ── Semana atual (some se não houver plano ativo) ───────────
+            const WeekOverviewCard(),
 
             // ── Progresso do plano ──────────────────────────────────────
             activePlanAsync.when(
@@ -129,14 +142,34 @@ class HomePage extends ConsumerWidget {
                 title: 'Sequência',
                 subtitle: '0 dias consecutivos',
               ),
-              data: (progress) => _SectionCard(
-                icon: Icons.local_fire_department,
-                title: 'Sequência',
-                subtitle: progress.streakDays == 0
-                    ? 'Nenhum treino ainda'
-                    : '${progress.streakDays} dia${progress.streakDays > 1 ? 's' : ''} consecutivo${progress.streakDays > 1 ? 's' : ''}  •  ${progress.totalMinutes} min treinados',
-                onTap: () => context.push(AppRoutes.history),
-              ),
+              data: (progress) {
+                final now = DateTime.now();
+                final streak = progress.currentStreak(now);
+                final plural = streak > 1 ? 's' : '';
+                final String subtitle;
+                if (progress.isStreakBroken(now)) {
+                  final lost = progress.streakDays;
+                  subtitle =
+                      'Sequência de $lost dia${lost > 1 ? 's' : ''} perdida — '
+                      'treine hoje para recomeçar';
+                } else if (streak == 0) {
+                  subtitle = 'Nenhum treino ainda';
+                } else {
+                  subtitle = '$streak dia$plural consecutivo$plural  •  '
+                      '${progress.totalMinutes} min treinados';
+                }
+                return _SectionCard(
+                  icon: progress.isStreakBroken(now)
+                      ? Icons.local_fire_department_outlined
+                      : Icons.local_fire_department,
+                  iconColor: progress.isStreakBroken(now)
+                      ? context.colorScheme.onSurfaceVariant
+                      : (streak > 0 ? AppColors.secondary : null),
+                  title: 'Sequência',
+                  subtitle: subtitle,
+                  onTap: () => context.push(AppRoutes.history),
+                );
+              },
             ),
             const SizedBox(height: 24),
 
@@ -154,19 +187,21 @@ class _SectionCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback? onTap;
+  final Color? iconColor;
 
   const _SectionCard({
     required this.icon,
     required this.title,
     required this.subtitle,
     this.onTap,
+    this.iconColor,
   });
 
   @override
   Widget build(BuildContext context) {
     return Card(
       child: ListTile(
-        leading: Icon(icon, color: context.colorScheme.primary),
+        leading: Icon(icon, color: iconColor ?? context.colorScheme.primary),
         title: Text(title),
         subtitle: Text(subtitle),
         trailing: onTap != null ? const Icon(Icons.chevron_right) : null,

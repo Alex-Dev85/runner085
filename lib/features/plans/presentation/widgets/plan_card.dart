@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:runner085/core/utils/extensions.dart';
 import 'package:runner085/features/plans/domain/entities/training_plan.dart';
 import 'package:runner085/features/plans/domain/enums/race_distance.dart';
+import 'package:runner085/features/settings/presentation/providers/app_settings_provider.dart';
 
-class PlanCard extends StatelessWidget {
+class PlanCard extends ConsumerWidget {
   final TrainingPlan plan;
   final VoidCallback onTap;
 
   const PlanCard({super.key, required this.plan, required this.onTap});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unit = ref.watch(distanceUnitProvider);
     final scheme = context.colorScheme;
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -94,7 +97,7 @@ class PlanCard extends StatelessWidget {
                       const SizedBox(width: 8),
                       _StatChip(
                         icon: Icons.straighten_outlined,
-                        label: '${plan.totalKm.toStringAsFixed(0)} km',
+                        label: unit.format(plan.totalKm, decimals: 0),
                       ),
                     ],
                   ),

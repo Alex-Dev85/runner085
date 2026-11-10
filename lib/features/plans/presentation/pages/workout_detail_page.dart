@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:runner085/app/router/app_routes.dart';
 import 'package:runner085/app/theme/app_colors.dart';
 import 'package:runner085/core/utils/extensions.dart';
 import 'package:runner085/core/widgets/app_error_widget.dart';
@@ -8,6 +10,8 @@ import 'package:runner085/core/widgets/app_loading.dart';
 import 'package:runner085/features/plans/domain/entities/workout.dart';
 import 'package:runner085/features/plans/presentation/providers/plans_provider.dart';
 import 'package:runner085/features/progress/presentation/providers/workout_progress_provider.dart';
+import 'package:runner085/features/settings/presentation/providers/app_settings_provider.dart';
+import 'package:runner085/features/training/presentation/providers/pace_zones_provider.dart';
 
 class WorkoutDetailPage extends ConsumerWidget {
   final String planId;
@@ -260,13 +264,14 @@ class _Hero extends StatelessWidget {
   }
 }
 
-class _MetricsRow extends StatelessWidget {
+class _MetricsRow extends ConsumerWidget {
   final Workout workout;
 
   const _MetricsRow({required this.workout});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unit = ref.watch(distanceUnitProvider);
     return Row(
       children: [
         Expanded(
@@ -281,8 +286,8 @@ class _MetricsRow extends StatelessWidget {
           Expanded(
             child: _MetricCard(
               icon: Icons.straighten,
-              value: workout.distanceKm!.toStringAsFixed(1),
-              label: 'km',
+              value: unit.fromKm(workout.distanceKm!).toStringAsFixed(1),
+              label: unit.label,
             ),
           ),
         if (workout.distanceKm == null) const Spacer(),
@@ -409,13 +414,17 @@ class _InfoCard extends StatelessWidget {
   }
 }
 
-class _ZoneCard extends StatelessWidget {
+class _ZoneCard extends ConsumerWidget {
   final Workout workout;
 
   const _ZoneCard({required this.workout});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final zones = ref.watch(paceZonesProvider).valueOrNull;
+    final unit = ref.watch(distanceUnitProvider);
+    final pace = zones?.rangeFor(workout.zone).format(unit);
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -452,6 +461,22 @@ class _ZoneCard extends StatelessWidget {
                       ),
                     ],
                   ),
+                  if (pace != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        children: [
+                          Icon(Icons.speed, size: 16, color: workout.zone.color),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Ritmo: $pace',
+                            style: context.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   Text(
                     workout.zone.hrRange,
                     style: context.textTheme.bodySmall?.copyWith(
@@ -460,6 +485,19 @@ class _ZoneCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(workout.zone.description),
+                  if (pace == null) ...[
+                    const SizedBox(height: 8),
+                    InkWell(
+                      onTap: () => context.go(AppRoutes.training),
+                      child: Text(
+                        'Faça o teste de 3 km para ver seu ritmo nesta zona →',
+                        style: context.textTheme.bodySmall?.copyWith(
+                          color: context.colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

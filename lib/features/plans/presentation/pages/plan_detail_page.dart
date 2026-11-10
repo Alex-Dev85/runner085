@@ -10,6 +10,8 @@ import 'package:runner085/features/plans/domain/entities/training_plan.dart';
 import 'package:runner085/features/plans/domain/entities/training_week.dart';
 import 'package:runner085/features/plans/presentation/providers/active_plan_provider.dart';
 import 'package:runner085/features/plans/presentation/providers/plans_provider.dart';
+import 'package:runner085/features/profile/presentation/providers/user_profile_provider.dart';
+import 'package:runner085/features/settings/presentation/providers/app_settings_provider.dart';
 
 class PlanDetailPage extends ConsumerWidget {
   final String planId;
@@ -64,6 +66,10 @@ class _PlanDetailContent extends ConsumerWidget {
     final activePlanAsync = ref.watch(activePlanProvider);
     final isActive = activePlanAsync.valueOrNull?.plan.id == plan.id;
     final isLoading = activePlanAsync.isLoading;
+    // Mantém perfil e preferências carregados para o aviso de compatibilidade.
+    final profile = ref.watch(userProfileProvider).valueOrNull;
+    final desiredFrequency =
+        ref.watch(appSettingsProvider).valueOrNull?.weeklyFrequency;
     return CustomScrollView(
       slivers: [
         SliverAppBar.large(
@@ -176,6 +182,50 @@ class _PlanDetailContent extends ConsumerWidget {
                     onPressed: isLoading
                         ? null
                         : () async {
+                            final warnings = <String>[
+                              if (profile != null &&
+                                  plan.level.index > profile.level.index)
+                                'Este plano é de nível '
+                                    '${plan.level.displayName} e seu perfil '
+                                    'está como ${profile.level.displayName}.',
+                              if (desiredFrequency != null &&
+                                  plan.sessionsPerWeek > desiredFrequency)
+                                'O plano tem ${plan.sessionsPerWeek} treinos '
+                                    'por semana, acima da sua frequência '
+                                    'desejada (${desiredFrequency}x).',
+                            ];
+                            if (warnings.isNotEmpty) {
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (dialogContext) => AlertDialog(
+                                  icon: const Icon(
+                                    Icons.warning_amber_rounded,
+                                  ),
+                                  title: const Text(
+                                    'Plano acima do seu perfil',
+                                  ),
+                                  content: Text(
+                                    '${warnings.join('\n\n')}\n\n'
+                                    'Deseja ativar mesmo assim?',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(dialogContext)
+                                              .pop(false),
+                                      child: const Text('Cancelar'),
+                                    ),
+                                    FilledButton(
+                                      onPressed: () =>
+                                          Navigator.of(dialogContext)
+                                              .pop(true),
+                                      child: const Text('Ativar mesmo assim'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirmed != true) return;
+                            }
                             await ref
                                 .read(activePlanProvider.notifier)
                                 .activate(plan.id);
@@ -205,13 +255,14 @@ class _PlanDetailContent extends ConsumerWidget {
   }
 }
 
-class _StatsRow extends StatelessWidget {
+class _StatsRow extends ConsumerWidget {
   final TrainingPlan plan;
 
   const _StatsRow({required this.plan});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unit = ref.watch(distanceUnitProvider);
     return Row(
       children: [
         Expanded(
@@ -233,8 +284,8 @@ class _StatsRow extends StatelessWidget {
         Expanded(
           child: _StatCard(
             icon: Icons.straighten,
-            value: plan.totalKm.toStringAsFixed(0),
-            label: 'km totais',
+            value: unit.fromKm(plan.totalKm).toStringAsFixed(0),
+            label: '${unit.label} totais',
           ),
         ),
       ],
@@ -281,14 +332,15 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-class _WeekRow extends StatelessWidget {
+class _WeekRow extends ConsumerWidget {
   final TrainingPlan plan;
   final TrainingWeek week;
 
   const _WeekRow({required this.plan, required this.week});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unit = ref.watch(distanceUnitProvider);
     final scheme = context.colorScheme;
     return Card(
       child: ListTile(
@@ -309,7 +361,7 @@ class _WeekRow extends StatelessWidget {
           ),
         ),
         subtitle: Text(
-          '${week.focus} • ${week.sessionsCount} treinos • ${week.totalKm.toStringAsFixed(0)} km',
+          '${week.focus} • ${week.sessionsCount} treinos • ${unit.format(week.totalKm, decimals: 0)}',
         ),
         trailing: const Icon(Icons.chevron_right),
         onTap: () => context.push(
