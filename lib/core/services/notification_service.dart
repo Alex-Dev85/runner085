@@ -120,7 +120,8 @@ class NotificationService {
     String title = 'Hora de treinar! 🏃',
     String body = 'Seu treino de hoje está esperando por você.',
   }) async {
-    if (kIsWeb) return;
+    // Sem inicializar (web, testes) não há alarmes para gerenciar.
+    if (kIsWeb || !_initialized) return;
     await cancelDailyReminder();
 
     final now = tz.TZDateTime.now(tz.local);
@@ -176,7 +177,8 @@ class NotificationService {
     required String workoutTitle,
     required int durationMinutes,
   }) async {
-    if (kIsWeb) return;
+    // Sem inicializar (web, testes) não há alarmes para gerenciar.
+    if (kIsWeb || !_initialized) return;
 
     const androidDetails = AndroidNotificationDetails(
       'workout_today',
@@ -205,12 +207,14 @@ class NotificationService {
   // ── Cancelamento ──────────────────────────────────────────────────────────
 
   Future<void> cancelDailyReminder() async {
-    if (kIsWeb) return;
+    // Sem inicializar (web, testes) não há alarmes para gerenciar.
+    if (kIsWeb || !_initialized) return;
     await _plugin.cancel(NotificationIds.dailyReminder);
   }
 
   Future<void> cancelAll() async {
-    if (kIsWeb) return;
+    // Sem inicializar (web, testes) não há alarmes para gerenciar.
+    if (kIsWeb || !_initialized) return;
     await _plugin.cancelAll();
   }
 }

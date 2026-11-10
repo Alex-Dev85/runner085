@@ -7,6 +7,8 @@ import 'package:runner085/app/providers/theme_provider.dart';
 import 'package:runner085/core/data/user_data/legacy_device_data.dart';
 import 'package:runner085/core/data/user_data/user_data_store.dart';
 import 'package:runner085/core/providers/user_data_providers.dart';
+import 'package:runner085/features/auth/presentation/providers/auth_provider.dart';
+import 'package:runner085/features/notifications/presentation/providers/notification_settings_provider.dart';
 import 'package:runner085/features/plans/presentation/providers/active_plan_provider.dart';
 import 'package:runner085/features/plans/domain/enums/race_distance.dart';
 import 'package:runner085/features/profile/presentation/providers/user_profile_provider.dart';
@@ -108,6 +110,8 @@ void main() {
       uid = StateProvider<String?>((ref) => 'ana');
       container = ProviderContainer(
         overrides: [
+          // Login já verificado (o uid vem do StateProvider abaixo).
+          authStateProvider.overrideWith((ref) => Stream.value(null)),
           currentUserIdProvider.overrideWith((ref) => ref.watch(uid)),
           userDataStoreProvider.overrideWith((ref) {
             final id = ref.watch(currentUserIdProvider);
@@ -146,6 +150,26 @@ void main() {
       final reloaded = await container.read(appSettingsProvider.future);
       expect(reloaded.weeklyFrequency, isNull);
       expect(reloaded.distanceUnit, DistanceUnit.miles);
+    });
+
+    test('lembrete acompanha a conta', () async {
+      await container.read(notificationSettingsProvider.future);
+      final reminder = container.read(notificationSettingsProvider.notifier);
+      await reminder.setTime(17, 29);
+
+      container.read(uid.notifier).state = 'bia';
+      final bia = await container.read(notificationSettingsProvider.future);
+      expect(bia.timeLabel, '07:00');
+      expect(bia.enabled, isFalse);
+
+      container.read(uid.notifier).state = 'ana';
+      final ana = await container.read(notificationSettingsProvider.future);
+      expect(ana.timeLabel, '17:29');
+
+      // Sem ninguém logado não há lembrete ativo.
+      container.read(uid.notifier).state = null;
+      final none = await container.read(notificationSettingsProvider.future);
+      expect(none.enabled, isFalse);
     });
 
     test('tema acompanha a conta e fica copiado no aparelho', () async {
@@ -212,6 +236,9 @@ void main() {
         'zones_3km_test_date': '2026-01-01T00:00:00.000',
         'settings_distance_unit': 'kilometers',
         'settings_weekly_frequency': 4,
+        'notif_enabled': true,
+        'notif_hour': 17,
+        'notif_minute': 29,
       });
 
       final ana = MigratingUserDataStore(LocalUserDataStore(uid: 'ana'));

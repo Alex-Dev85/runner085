@@ -36,7 +36,10 @@ class LegacyDeviceData {
     'settings_weekly_frequency',
   ];
 
+  static const reminderKeys = ['notif_enabled', 'notif_hour', 'notif_minute'];
+
   static const Map<String, List<String>> keysByDoc = {
+    'reminder': reminderKeys,
     'active_plan': activePlanKeys,
     'progress': progressKeys,
     'profile': profileKeys,
@@ -74,6 +77,16 @@ class LegacyDeviceData {
         final goal = prefs.getString('user_profile_goal_distance');
         if (level == null && goal == null) return null;
         return {'level': level, 'goalDistance': goal};
+      case 'reminder':
+        final enabled = prefs.getBool('notif_enabled');
+        final hour = prefs.getInt('notif_hour');
+        final minute = prefs.getInt('notif_minute');
+        if (enabled == null && hour == null && minute == null) return null;
+        return {
+          'enabled': enabled ?? false,
+          if (hour != null) 'hour': hour,
+          if (minute != null) 'minute': minute,
+        };
       case 'settings':
         final unit = prefs.getString('settings_distance_unit');
         final frequency = prefs.getInt('settings_weekly_frequency');
