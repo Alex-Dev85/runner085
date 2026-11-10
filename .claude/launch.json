@@ -6,6 +6,12 @@
       "runtimeExecutable": "flutter",
       "runtimeArgs": ["run", "-d", "web-server", "--web-port", "8085", "--web-hostname", "localhost"],
       "port": 8085
+    },
+    {
+      "name": "runner085-web-firebase",
+      "runtimeExecutable": "flutter",
+      "runtimeArgs": ["run", "-d", "web-server", "--web-port", "8086", "--web-hostname", "localhost", "--dart-define=DEMO_MODE=false"],
+      "port": 8086
     }
   ]
 }

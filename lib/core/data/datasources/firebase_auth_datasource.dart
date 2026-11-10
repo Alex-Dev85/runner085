@@ -82,8 +82,14 @@ class FirebaseAuthDatasource {
   }
 
   String _mapAuthError(String code) => switch (code) {
-        'user-not-found' => 'Usuário não encontrado',
-        'wrong-password' => 'Senha incorreta',
+        // Projetos novos usam proteção contra enumeração de e-mail e
+        // retornam 'invalid-credential' tanto para e-mail quanto para senha.
+        'invalid-credential' ||
+        'user-not-found' ||
+        'wrong-password' =>
+          'E-mail ou senha incorretos',
+        'network-request-failed' => 'Sem conexão com a internet',
+        'missing-email' => 'Informe o e-mail',
         'email-already-in-use' => 'E-mail já está em uso',
         'weak-password' => 'Senha muito fraca',
         'invalid-email' => 'E-mail inválido',

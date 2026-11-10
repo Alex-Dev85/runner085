@@ -52,3 +52,7 @@ GoogleService-Info.plist
 # Environment
 .env
 .env.*
+
+# Firebase CLI
+firebase-debug.log
+firestore-debug.log

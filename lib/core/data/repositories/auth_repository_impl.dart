@@ -1,3 +1,5 @@
+import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:runner085/core/data/datasources/firebase_auth_datasource.dart';
 import 'package:runner085/core/data/datasources/firestore_datasource.dart';
 import 'package:runner085/core/domain/entities/user_entity.dart';
@@ -17,39 +19,16 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Stream<UserEntity?> get authStateChanges {
-    return _authDatasource.authStateChanges.asyncMap((user) async {
-      if (user == null) return null;
-      final result = await _firestoreDatasource.getDocument(
-        _firestoreDatasource.usersRef,
-        user.uid,
-      );
-      return result.when(
-        success: (data) => UserEntity.fromJson(data),
-        failure: (_) => UserEntity(
-          id: user.uid,
-          email: user.email ?? '',
-          displayName: user.displayName,
-        ),
-      );
-    });
+    return _authDatasource.authStateChanges.asyncMap(
+      (user) => user == null ? null : _loadUser(user),
+    );
   }
 
   @override
   Future<UserEntity?> get currentUser async {
     final user = _authDatasource.currentUser;
     if (user == null) return null;
-    final result = await _firestoreDatasource.getDocument(
-      _firestoreDatasource.usersRef,
-      user.uid,
-    );
-    return result.when(
-      success: (data) => UserEntity.fromJson(data),
-      failure: (_) => UserEntity(
-        id: user.uid,
-        email: user.email ?? '',
-        displayName: user.displayName,
-      ),
-    );
+    return _loadUser(user);
   }
 
   @override
@@ -66,20 +45,7 @@ class AuthRepositoryImpl implements AuthRepository {
             const AppFailure.auth(message: 'Erro ao autenticar'),
           );
         }
-        final docResult = await _firestoreDatasource.getDocument(
-          _firestoreDatasource.usersRef,
-          user.uid,
-        );
-        return docResult.when(
-          success: (data) => Result.success(UserEntity.fromJson(data)),
-          failure: (_) => Result.success(
-            UserEntity(
-              id: user.uid,
-              email: user.email ?? '',
-              displayName: user.displayName,
-            ),
-          ),
-        );
+        return Result.success(await _loadUser(user));
       },
       failure: (failure) => Result.failure(failure),
     );
@@ -101,15 +67,19 @@ class AuthRepositoryImpl implements AuthRepository {
           );
         }
 
-        await user.updateDisplayName(displayName);
-
         final userEntity = UserEntity(
           id: user.uid,
           email: email,
           displayName: displayName,
-          createdAt: DateTime.now(),
+          // Em UTC: serializa com "Z" e não depende do fuso do aparelho.
+          createdAt: DateTime.now().toUtc(),
         );
 
+        // A conta já existe no Auth; falhas aqui não devem bloquear o
+        // cadastro (o perfil é recriado a partir do Auth no próximo login).
+        try {
+          await user.updateDisplayName(displayName);
+        } catch (_) {}
         await _firestoreDatasource.setDocument(
           _firestoreDatasource.usersRef,
           user.uid,
@@ -128,4 +98,29 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Result<void>> resetPassword(String email) =>
       _authDatasource.resetPassword(email);
+
+  /// Busca o perfil em `users/{uid}`. Se o documento não existir, não puder
+  /// ser lido ou estiver malformado, usa os dados básicos do Firebase Auth
+  /// — o login nunca falha por causa do Firestore.
+  Future<UserEntity> _loadUser(User user) async {
+    final fallback = UserEntity(
+      id: user.uid,
+      email: user.email ?? '',
+      displayName: user.displayName,
+    );
+    final result = await _firestoreDatasource.getDocument(
+      _firestoreDatasource.usersRef,
+      user.uid,
+    );
+    return result.when(
+      success: (data) {
+        try {
+          return UserEntity.fromJson({...data, 'id': user.uid});
+        } catch (_) {
+          return fallback;
+        }
+      },
+      failure: (_) => fallback,
+    );
+  }
 }

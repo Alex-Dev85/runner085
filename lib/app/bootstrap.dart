@@ -19,10 +19,13 @@ final logger = Logger(
 );
 
 class AppBootstrap {
-  /// When true, the app skips Firebase initialization and uses a fake
-  /// in-memory auth repository so you can validate the UI without setting
-  /// up Firebase. Switch to `false` after running `flutterfire configure`.
-  static const bool demoMode = true;
+  /// Quando true, o app não inicializa o Firebase e usa um login falso em
+  /// memória, para validar a UI sem backend.
+  ///
+  /// Controlado na execução: `flutter run --dart-define=DEMO_MODE=false`
+  /// usa o Firebase de verdade (requer `flutterfire configure`).
+  static const bool demoMode =
+      bool.fromEnvironment('DEMO_MODE', defaultValue: true);
 
   static late Environment _environment;
 
