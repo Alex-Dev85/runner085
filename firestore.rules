@@ -3,7 +3,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // Cada usuário só lê e escreve o próprio perfil e os próprios dados
-    // (plano ativo, progresso, perfil de corredor, zonas) em
+    // (plano ativo, progresso, perfil de corredor, zonas, preferências) em
     // users/{uid}/data/{doc}.
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
@@ -11,7 +11,7 @@ service cloud.firestore {
       match /data/{docId} {
         allow read, write: if request.auth != null
           && request.auth.uid == userId
-          && docId in ['active_plan', 'progress', 'profile', 'pace_zones'];
+          && docId in ['active_plan', 'progress', 'profile', 'pace_zones', 'settings'];
       }
     }
 

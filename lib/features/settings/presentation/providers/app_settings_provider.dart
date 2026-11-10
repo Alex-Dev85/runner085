@@ -1,9 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:runner085/core/providers/user_data_providers.dart';
+import 'package:runner085/features/settings/data/user_settings_repository.dart';
 import 'package:runner085/features/settings/domain/distance_unit.dart';
 
-/// Preferências gerais do app, persistidas via SharedPreferences.
+/// Recriado quando a conta muda (depende do armazenamento do usuário).
+final userSettingsRepositoryProvider = Provider<UserSettingsRepository>((ref) {
+  return UserSettingsRepository(ref.watch(userDataStoreProvider));
+});
+
+/// Preferências gerais do usuário, salvas na conta (documento `settings`).
 class AppSettings {
   final DistanceUnit distanceUnit;
 
@@ -15,53 +21,47 @@ class AppSettings {
     this.distanceUnit = DistanceUnit.kilometers,
     this.weeklyFrequency,
   });
+
+  factory AppSettings.fromJson(Map<String, dynamic> json) => AppSettings(
+        distanceUnit: DistanceUnit.values.firstWhere(
+          (u) => u.name == json['distanceUnit'],
+          orElse: () => DistanceUnit.kilometers,
+        ),
+        weeklyFrequency: (json['weeklyFrequency'] as num?)?.toInt(),
+      );
 }
 
 class AppSettingsNotifier extends AsyncNotifier<AppSettings> {
-  static const _keyDistanceUnit = 'settings_distance_unit';
-  static const _keyWeeklyFrequency = 'settings_weekly_frequency';
+  UserSettingsRepository get _repo => ref.read(userSettingsRepositoryProvider);
 
   @override
   Future<AppSettings> build() async {
-    final prefs = await SharedPreferences.getInstance();
-    final unitName = prefs.getString(_keyDistanceUnit);
-    final unit = DistanceUnit.values.firstWhere(
-      (u) => u.name == unitName,
-      orElse: () => DistanceUnit.kilometers,
-    );
-    return AppSettings(
-      distanceUnit: unit,
-      weeklyFrequency: prefs.getInt(_keyWeeklyFrequency),
-    );
+    // watch: recarrega as preferências ao trocar de conta.
+    final repo = ref.watch(userSettingsRepositoryProvider);
+    return AppSettings.fromJson(await repo.read());
   }
 
   Future<void> setDistanceUnit(DistanceUnit unit) async {
     final current = state.valueOrNull ?? const AppSettings();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_keyDistanceUnit, unit.name);
     state = AsyncValue.data(
       AppSettings(
         distanceUnit: unit,
         weeklyFrequency: current.weeklyFrequency,
       ),
     );
+    await _repo.update({'distanceUnit': unit.name});
   }
 
   /// Define a frequência semanal desejada. `null` remove a preferência.
   Future<void> setWeeklyFrequency(int? frequency) async {
     final current = state.valueOrNull ?? const AppSettings();
-    final prefs = await SharedPreferences.getInstance();
-    if (frequency == null) {
-      await prefs.remove(_keyWeeklyFrequency);
-    } else {
-      await prefs.setInt(_keyWeeklyFrequency, frequency);
-    }
     state = AsyncValue.data(
       AppSettings(
         distanceUnit: current.distanceUnit,
         weeklyFrequency: frequency,
       ),
     );
+    await _repo.update({'weeklyFrequency': frequency});
   }
 }
 

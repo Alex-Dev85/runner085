@@ -29,11 +29,19 @@ class LegacyDeviceData {
     'zones_3km_test_date',
   ];
 
+  /// `theme_mode` não entra aqui: continua no aparelho como cópia do último
+  /// tema usado (para as telas antes do login) e não é apagado.
+  static const settingsKeys = [
+    'settings_distance_unit',
+    'settings_weekly_frequency',
+  ];
+
   static const Map<String, List<String>> keysByDoc = {
     'active_plan': activePlanKeys,
     'progress': progressKeys,
     'profile': profileKeys,
     'pace_zones': paceZonesKeys,
+    'settings': settingsKeys,
   };
 
   /// Converte as chaves antigas no formato do documento novo, ou `null`
@@ -66,6 +74,17 @@ class LegacyDeviceData {
         final goal = prefs.getString('user_profile_goal_distance');
         if (level == null && goal == null) return null;
         return {'level': level, 'goalDistance': goal};
+      case 'settings':
+        final unit = prefs.getString('settings_distance_unit');
+        final frequency = prefs.getInt('settings_weekly_frequency');
+        if (unit == null && frequency == null) return null;
+        return {
+          if (unit != null) 'distanceUnit': unit,
+          if (frequency != null) 'weeklyFrequency': frequency,
+          // Leva junto o tema que estava em uso neste aparelho.
+          if (prefs.getString('theme_mode') case final theme?)
+            'themeMode': theme,
+        };
       case 'pace_zones':
         final seconds = prefs.getInt('zones_3km_test_seconds');
         if (seconds == null) return null;

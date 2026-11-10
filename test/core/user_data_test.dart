@@ -1,7 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:runner085/app/providers/theme_provider.dart';
 import 'package:runner085/core/data/user_data/legacy_device_data.dart';
 import 'package:runner085/core/data/user_data/user_data_store.dart';
 import 'package:runner085/core/providers/user_data_providers.dart';
@@ -10,6 +12,8 @@ import 'package:runner085/features/plans/domain/enums/race_distance.dart';
 import 'package:runner085/features/profile/presentation/providers/user_profile_provider.dart';
 import 'package:runner085/features/progress/data/workout_progress_repository.dart';
 import 'package:runner085/features/progress/presentation/providers/workout_progress_provider.dart';
+import 'package:runner085/features/settings/domain/distance_unit.dart';
+import 'package:runner085/features/settings/presentation/providers/app_settings_provider.dart';
 import 'package:runner085/features/training/presentation/providers/pace_zones_provider.dart';
 
 void main() {
@@ -96,7 +100,104 @@ void main() {
     });
   });
 
+  group('preferências por conta', () {
+    late StateProvider<String?> uid;
+    late ProviderContainer container;
+
+    setUp(() {
+      uid = StateProvider<String?>((ref) => 'ana');
+      container = ProviderContainer(
+        overrides: [
+          currentUserIdProvider.overrideWith((ref) => ref.watch(uid)),
+          userDataStoreProvider.overrideWith((ref) {
+            final id = ref.watch(currentUserIdProvider);
+            return id == null
+                ? InMemoryUserDataStore()
+                : LocalUserDataStore(uid: id);
+          }),
+        ],
+      );
+      addTearDown(container.dispose);
+    });
+
+    Future<void> settle() => Future<void>.delayed(Duration.zero);
+
+    test('unidade e frequência acompanham a conta', () async {
+      await container.read(appSettingsProvider.future);
+      final settings = container.read(appSettingsProvider.notifier);
+      await settings.setDistanceUnit(DistanceUnit.miles);
+      await settings.setWeeklyFrequency(4);
+
+      container.read(uid.notifier).state = 'bia';
+      final bia = await container.read(appSettingsProvider.future);
+      expect(bia.distanceUnit, DistanceUnit.kilometers);
+      expect(bia.weeklyFrequency, isNull);
+
+      container.read(uid.notifier).state = 'ana';
+      final ana = await container.read(appSettingsProvider.future);
+      expect(ana.distanceUnit, DistanceUnit.miles);
+      expect(ana.weeklyFrequency, 4);
+
+      // Remover a frequência não apaga a unidade.
+      await container
+          .read(appSettingsProvider.notifier)
+          .setWeeklyFrequency(null);
+      container.invalidate(appSettingsProvider);
+      final reloaded = await container.read(appSettingsProvider.future);
+      expect(reloaded.weeklyFrequency, isNull);
+      expect(reloaded.distanceUnit, DistanceUnit.miles);
+    });
+
+    test('tema acompanha a conta e fica copiado no aparelho', () async {
+      container.listen(themeModeProvider, (_, __) {});
+      await settle();
+      container.read(themeModeProvider.notifier).setThemeMode(ThemeMode.dark);
+      await settle();
+
+      // A cópia no aparelho guarda o último tema (telas antes do login).
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('theme_mode'), 'dark');
+
+      // Bia nunca escolheu: herda a cópia do aparelho, sem gravar na conta.
+      container.read(uid.notifier).state = 'bia';
+      await settle();
+      expect(container.read(themeModeProvider), ThemeMode.dark);
+      container.read(themeModeProvider.notifier).setThemeMode(ThemeMode.light);
+      await settle();
+
+      // Ana volta: vale o tema da conta dela, não o último do aparelho.
+      container.read(uid.notifier).state = 'ana';
+      await settle();
+      expect(container.read(themeModeProvider), ThemeMode.dark);
+      expect(prefs.getString('theme_mode'), 'dark');
+    });
+  });
+
   group('migração dos dados antigos do aparelho', () {
+    test('preferências vão para a conta; o tema continua no aparelho',
+        () async {
+      SharedPreferences.setMockInitialValues({
+        'settings_distance_unit': 'miles',
+        'settings_weekly_frequency': 3,
+        'theme_mode': 'light',
+      });
+
+      final ana = MigratingUserDataStore(LocalUserDataStore(uid: 'ana'));
+      expect(await ana.read('settings'), {
+        'distanceUnit': 'miles',
+        'weeklyFrequency': 3,
+        'themeMode': 'light',
+      });
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.containsKey('settings_distance_unit'), isFalse);
+      expect(prefs.containsKey('settings_weekly_frequency'), isFalse);
+      expect(prefs.getString('theme_mode'), 'light');
+
+      final bia = MigratingUserDataStore(LocalUserDataStore(uid: 'bia'));
+      expect(await bia.read('settings'), isNull);
+    });
+
     test('primeira conta recebe os dados e as chaves globais somem', () async {
       SharedPreferences.setMockInitialValues({
         'active_plan_id': 'plan-5k',
@@ -109,6 +210,8 @@ void main() {
         'user_profile_goal_distance': 'tenKm',
         'zones_3km_test_seconds': 900,
         'zones_3km_test_date': '2026-01-01T00:00:00.000',
+        'settings_distance_unit': 'kilometers',
+        'settings_weekly_frequency': 4,
       });
 
       final ana = MigratingUserDataStore(LocalUserDataStore(uid: 'ana'));
